@@ -1,0 +1,104 @@
+import time
+import RPi.GPIO as GPIO  # Replace with appropriate library for your microcontroller
+
+# Pin definitions
+FLUX_SENSOR_PIN = 17  # GPIO pin for flux sensor (emergency alert)
+MEMS_SENSOR_X_PIN = 27  # GPIO pin for MEMS X-axis
+MEMS_SENSOR_Y_PIN = 22  # GPIO pin for MEMS Y-axis
+MEMS_SENSOR_Z_PIN = 23  # GPIO pin for MEMS Z-axis
+
+WATER_LED_PIN = 5      # GPIO pin for Water request indicator
+MEDICINE_LED_PIN = 6   # GPIO pin for Medicine request indicator
+FOOD_LED_PIN = 13      # GPIO pin for Food request indicator
+HELP_LED_PIN = 19      # GPIO pin for Help request indicator
+EMERGENCY_BUZZER_PIN = 26  # GPIO pin for Emergency buzzer
+
+# Thresholds for MEMS sensor gesture recognition
+THRESHOLD_X_POS = 100
+THRESHOLD_X_NEG = -100
+THRESHOLD_Y_POS = 100
+THRESHOLD_Y_NEG = -100
+THRESHOLD_Z_POS = 100
+THRESHOLD_Z_NEG = -100
+
+# GPIO setup
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(FLUX_SENSOR_PIN, GPIO.IN)
+GPIO.setup(MEMS_SENSOR_X_PIN, GPIO.IN)
+GPIO.setup(MEMS_SENSOR_Y_PIN, GPIO.IN)
+GPIO.setup(MEMS_SENSOR_Z_PIN, GPIO.IN)
+
+GPIO.setup(WATER_LED_PIN, GPIO.OUT)
+GPIO.setup(MEDICINE_LED_PIN, GPIO.OUT)
+GPIO.setup(FOOD_LED_PIN, GPIO.OUT)
+GPIO.setup(HELP_LED_PIN, GPIO.OUT)
+GPIO.setup(EMERGENCY_BUZZER_PIN, GPIO.OUT)
+
+# Set all outputs to LOW initially
+GPIO.output(WATER_LED_PIN, GPIO.LOW)
+GPIO.output(MEDICINE_LED_PIN, GPIO.LOW)
+GPIO.output(FOOD_LED_PIN, GPIO.LOW)
+GPIO.output(HELP_LED_PIN, GPIO.LOW)
+GPIO.output(EMERGENCY_BUZZER_PIN, GPIO.LOW)
+
+def read_flux_sensor():
+    return GPIO.input(FLUX_SENSOR_PIN)
+
+def read_mems_sensor_x():
+    # Replace with actual ADC reading logic if necessary
+    return GPIO.input(MEMS_SENSOR_X_PIN)
+
+def read_mems_sensor_y():
+    # Replace with actual ADC reading logic if necessary
+    return GPIO.input(MEMS_SENSOR_Y_PIN)
+
+def read_mems_sensor_z():
+    # Replace with actual ADC reading logic if necessary
+    return GPIO.input(MEMS_SENSOR_Z_PIN)
+
+def handle_emergency_alert():
+    GPIO.output(EMERGENCY_BUZZER_PIN, GPIO.HIGH)
+    time.sleep(1)
+    GPIO.output(EMERGENCY_BUZZER_PIN, GPIO.LOW)
+
+def handle_gesture_recognition():
+    x = read_mems_sensor_x()
+    y = read_mems_sensor_y()
+    z = read_mems_sensor_z()
+
+    # Water gesture (upwards motion)
+    if z > THRESHOLD_Z_POS:
+        GPIO.output(WATER_LED_PIN, GPIO.HIGH)
+        time.sleep(0.5)
+        GPIO.output(WATER_LED_PIN, GPIO.LOW)
+
+    # Medicine gesture (downwards motion)
+    elif z < THRESHOLD_Z_NEG:
+        GPIO.output(MEDICINE_LED_PIN, GPIO.HIGH)
+        time.sleep(0.5)
+        GPIO.output(MEDICINE_LED_PIN, GPIO.LOW)
+
+    # Food gesture (right motion)
+    elif x > THRESHOLD_X_POS:
+        GPIO.output(FOOD_LED_PIN, GPIO.HIGH)
+        time.sleep(0.5)
+        GPIO.output(FOOD_LED_PIN, GPIO.LOW)
+
+    # Help gesture (left motion)
+    elif x < THRESHOLD_X_NEG:
+        GPIO.output(HELP_LED_PIN, GPIO.HIGH)
+        time.sleep(0.5)
+        GPIO.output(HELP_LED_PIN, GPIO.LOW)
+
+def main():
+    try:
+        while True:
+            if read_flux_sensor():
+                handle_emergency_alert()
+            handle_gesture_recognition()
+            time.sleep(0.1)  # Sampling delay
+    except KeyboardInterrupt:
+        GPIO.cleanup()
+
+if __name__ == "__main__":
+    main()
